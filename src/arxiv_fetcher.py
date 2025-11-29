@@ -4,7 +4,6 @@ import os
 import time
 import urllib.parse
 from datetime import datetime, timedelta
-from openai import OpenAI
 
 
 RELEVANCE_SCORE_SCHEMA = {
@@ -61,17 +60,7 @@ def fetch_arxiv_papers(categories, max_results=20, since_date=None):
     print(f"Fetched {len(papers)} papers.")
     return papers
 
-def filter_papers_with_llm(papers, keywords, model_name):
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        print("Warning: GITHUB_TOKEN not found. Skipping LLM filtering.")
-        return papers # Fallback: return all or implement basic string matching
-
-    client = OpenAI(
-        base_url="https://models.inference.ai.azure.com",
-        api_key=token,
-    )
-
+def filter_papers_with_llm(papers, keywords, model_name, client):
     filtered_papers = []
     
     print(f"Filtering {len(papers)} papers with LLM...")
@@ -121,7 +110,12 @@ Return a score from 0-10 where 0 = not relevant, 10 = highly relevant."""
     return filtered_papers
 
 if __name__ == "__main__":
+    import os
     import yaml
+    from openai import OpenAI
+    from dotenv import load_dotenv
+    
+    load_dotenv()
     with open("config.yaml", "r") as f:
         config = yaml.safe_load(f)
     
@@ -129,13 +123,16 @@ if __name__ == "__main__":
     keywords = config["arxiv"]["keywords"]
     max_results = config["arxiv"]["max_results"]
     filter_model = config.get("models", {}).get("filter", "gpt-4o-mini")
+    base_url = config.get("llm_service", {}).get("base_url", "https://models.inference.ai.azure.com")
+    
+    client = OpenAI(base_url=base_url, api_key=os.environ.get("GITHUB_TOKEN"))
     
     print("Fetching papers...")
     papers = fetch_arxiv_papers(categories, max_results)
     print(f"Fetched {len(papers)} papers.")
     
     print("Filtering papers...")
-    relevant_papers = filter_papers_with_llm(papers, keywords, filter_model)
+    relevant_papers = filter_papers_with_llm(papers, keywords, filter_model, client)
     print(f"Selected {len(relevant_papers)} relevant papers.")
     
     # For testing purposes

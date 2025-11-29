@@ -1,6 +1,8 @@
+import os
 import yaml
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from openai import OpenAI
 from arxiv_fetcher import fetch_arxiv_papers, filter_papers_with_llm
 from summarizer import summarize_papers
 from issue_creator import create_issue, get_last_issue_date
@@ -29,6 +31,11 @@ def load_and_validate_config():
     if "repository" not in github or not github["repository"]:
         raise ValueError("Config missing 'github.repository'")
     
+    # Validate llm_service section (with defaults)
+    if "llm_service" not in config:
+        config["llm_service"] = {}
+    config["llm_service"].setdefault("base_url", "https://models.github.ai/inference")
+    
     # Validate models section (with defaults)
     if "models" not in config:
         config["models"] = {}
@@ -36,6 +43,19 @@ def load_and_validate_config():
     config["models"].setdefault("summarize", "gpt-5")
     
     return config
+
+
+def create_openai_client(base_url):
+    """Create and return an OpenAI client."""
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        raise ValueError("GITHUB_TOKEN environment variable is not set.")
+    
+    print(f"Creating OpenAI client with base URL: {base_url}")
+    return OpenAI(
+        base_url=base_url,
+        api_key=token,
+    )
 
 
 def main():
@@ -53,8 +73,12 @@ def main():
     usernames = github_config.get("usernames", [])
     issue_label = github_config.get("issue_label", "arxiv-summary")
     
+    openai_base_url = config["llm_service"]["base_url"]
     filter_model = config["models"]["filter"]
     summarize_model = config["models"]["summarize"]
+    
+    # Create OpenAI client
+    client = create_openai_client(openai_base_url)
     
     # 0. Determine start date
     last_run = get_last_issue_date(repo, issue_label)
@@ -73,14 +97,14 @@ def main():
 
     # 2. Filter (LLM)
     print("--- Step 2: Filtering Papers ---")
-    relevant_papers = filter_papers_with_llm(papers, keywords, filter_model)
+    relevant_papers = filter_papers_with_llm(papers, keywords, filter_model, client)
     if not relevant_papers:
         print("No relevant papers found after filtering.")
         return
 
     # 3. Summarize
     print("--- Step 3: Summarizing Papers ---")
-    summarized_papers = summarize_papers(relevant_papers, summarize_model)
+    summarized_papers = summarize_papers(relevant_papers, summarize_model, client)
 
     # 4. Create Issue
     print("--- Step 4: Creating GitHub Issue ---")

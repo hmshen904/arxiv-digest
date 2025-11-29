@@ -17,6 +17,9 @@ github:
     - "matouskozak"
   issue_label: "arxiv-summary"
 
+llm_service:
+  base_url: "https://models.github.ai/inference"
+
 models:
   filter: "gpt-5-mini"
   summarize: "gpt-5"

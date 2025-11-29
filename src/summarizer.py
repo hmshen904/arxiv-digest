@@ -1,8 +1,6 @@
-import os
 import tempfile
 import requests
 import fitz  # PyMuPDF
-from openai import OpenAI
 
 from paper_summary import PaperSummary
 from utils import save_summary_to_tmp
@@ -40,16 +38,7 @@ def extract_text_from_pdf(pdf_url, max_chars=50000):
         return None
 
 
-def summarize_papers(papers, model_name):
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        raise ValueError("GITHUB_TOKEN environment variable is not set.")
-
-    client = OpenAI(
-        base_url="https://models.inference.ai.azure.com",
-        api_key=token,
-    )
-
+def summarize_papers(papers, model_name, client):
     summaries = []
     print(f"Summarizing {len(papers)} papers...")
 
@@ -113,11 +102,19 @@ Authors: {', '.join(paper['authors'])}
     return summaries
 
 if __name__ == "__main__":
+    import os
     import yaml
+    from openai import OpenAI
+    from dotenv import load_dotenv
+    
+    load_dotenv()
     with open("config.yaml", "r") as f:
         config = yaml.safe_load(f)
     
     summarize_model = config.get("models", {}).get("summarize", "gpt-4o")
+    base_url = config.get("llm_service", {}).get("base_url", "https://models.inference.ai.azure.com")
+    
+    client = OpenAI(base_url=base_url, api_key=os.environ.get("GITHUB_TOKEN"))
     
     # Test with dummy data
     dummy_papers = [{
@@ -127,7 +124,7 @@ if __name__ == "__main__":
         "link": "https://arxiv.org/abs/2401.00001"
     }]
     try:
-        summarized = summarize_papers(dummy_papers, summarize_model)
+        summarized = summarize_papers(dummy_papers, summarize_model, client)
         print(summarized[0]['llm_summary'])
     except Exception as e:
         print(f"Test failed: {e}")
