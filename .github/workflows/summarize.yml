@@ -28,6 +28,7 @@ jobs:
 
       - name: Run Summarizer
         env:
+          PYTHONUNBUFFERED: "1" # Ensures real-time logging
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           # Optional: Override LLM provider via repository secrets

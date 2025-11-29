@@ -1,7 +1,7 @@
 arxiv:
   categories:
     - "cs.CR" # Cryptography and Security
-    - "cs.LG" # Machine Learning
+    # - "cs.LG" # Machine Learning
     # - "cs.SE" # Software Engineering
     # - "cs.CL" # Computation and Language
     # - "cs.AI" # Artificial Intelligence
@@ -12,7 +12,7 @@ arxiv:
     - "Malware Analysis"
     - "AI Coding Agents"
     - "Secure Code Generation"
-  max_results: 20
+  max_results: 100
 
 github:
   usernames:
@@ -28,5 +28,5 @@ llm_service:
   # Local: base_url: "http://localhost:11434/v1"
 
 models:
-  filter: "gpt-5-mini"
-  summarize: "gpt-5"
+  filter: "gpt-4.1-mini"
+  summarize: "gpt-4.1"
