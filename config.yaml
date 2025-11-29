@@ -1,0 +1,22 @@
+arxiv:
+  categories:
+    - "cs.AI"
+    - "cs.LG"
+    - "cs.CL"
+  keywords:
+    - "LLM"
+    - "Large Language Model"
+    - "Agent"
+    - "Multi-agent"
+    - "Reasoning"
+  max_results: 5
+
+github:
+  repository: "matouskozak/arXiv-paper-summaries-review"
+  usernames:
+    - "matouskozak"
+  issue_label: "arxiv-summary"
+
+models:
+  filter: "gpt-5-mini"
+  summarize: "gpt-5"
