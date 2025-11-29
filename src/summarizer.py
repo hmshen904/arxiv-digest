@@ -1,5 +1,5 @@
 from paper_summary import PaperSummary
-from utils import save_summary_to_tmp, extract_text_from_pdf
+from utils import save_summary_to_tmp, extract_text_from_pdf, call_with_retry
 
 
 def get_pdf_url(arxiv_link):
@@ -41,14 +41,14 @@ Authors: {', '.join(paper['authors'])}
 {content_section}"""
 
         try:
-            response = client.chat.completions.create(
+            response = call_with_retry(lambda: client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": "You are an expert researcher assistant. Provide concise and insightful summaries."},
                     {"role": "user", "content": prompt},
                 ],
                 model=model_name,
                 response_format=PaperSummary.get_response_format()
-            )
+            ))
             
             summary = PaperSummary.from_json(response.choices[0].message.content)
             paper['llm_summary'] = summary

@@ -3,8 +3,66 @@ import yaml
 import tempfile
 import requests
 import fitz  # PyMuPDF
+import time
+import random
 from pathlib import Path
 from datetime import datetime
+from openai import RateLimitError, APIStatusError
+
+
+def _get_retry_delay(e, attempt, base_delay, max_delay):
+    """Calculate retry delay, respecting Retry-After header if present."""
+    retry_after = None
+    if hasattr(e, 'response') and e.response is not None:
+        retry_after = e.response.headers.get('Retry-After') or e.response.headers.get('retry-after')
+    
+    if retry_after:
+        try:
+            return float(retry_after)
+        except ValueError:
+            pass
+    
+    # Exponential backoff with jitter
+    return min(base_delay * (2 ** attempt) + random.uniform(0, 1), max_delay)
+
+
+def call_with_retry(func, max_retries=5, base_delay=1.0, max_delay=60.0):
+    """
+    Call a function with exponential backoff retry on rate limit errors.
+    
+    Respects Retry-After header from GitHub Models API when available.
+    
+    Args:
+        func: A callable (typically a lambda) that makes the API call
+        max_retries: Maximum number of retry attempts
+        base_delay: Initial delay in seconds
+        max_delay: Maximum delay between retries in seconds
+    
+    Returns:
+        The result of the function call
+    
+    Raises:
+        The last exception if all retries are exhausted
+    """
+    last_exception = None
+    
+    for attempt in range(max_retries + 1):
+        try:
+            return func()
+        except (RateLimitError, APIStatusError) as e:
+            # Only retry APIStatusError if it's a 429
+            if isinstance(e, APIStatusError) and e.status_code != 429:
+                raise e
+            
+            last_exception = e
+            if attempt == max_retries:
+                raise e
+            
+            delay = _get_retry_delay(e, attempt, base_delay, max_delay)
+            print(f"Rate limited. Retrying in {delay:.1f}s (attempt {attempt + 1}/{max_retries})...")
+            time.sleep(delay)
+    
+    raise last_exception
 
 
 def load_config(config_path: str = "config.yaml") -> dict:

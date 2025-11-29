@@ -6,6 +6,9 @@ import urllib.parse
 from datetime import datetime, timedelta
 
 
+from utils import call_with_retry
+
+
 RELEVANCE_SCORE_SCHEMA = {
     "type": "object",
     "properties": {
@@ -76,7 +79,7 @@ Abstract: {paper['abstract']}
 Return a score from 0-10 where 0 = not relevant, 10 = highly relevant."""
 
         try:
-            response = client.chat.completions.create(
+            response = call_with_retry(lambda: client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": "You are a research paper filter."},
                     {"role": "user", "content": prompt},
@@ -90,7 +93,7 @@ Return a score from 0-10 where 0 = not relevant, 10 = highly relevant."""
                         "schema": RELEVANCE_SCORE_SCHEMA
                     }
                 }
-            )
+            ))
             
             result = json.loads(response.choices[0].message.content)
             score = result["score"]
