@@ -3,11 +3,12 @@
 A GitHub Actions workflow that fetches recent ArXiv papers, filters them using LLMs, summarizes them, and publishes the results as GitHub Issues.
 
 ## Features
-- **Smart Filtering**: Uses LLMs (e.g., GPT-5-mini) to score paper relevance (0-10) based on your keywords.
-- **Concise Summaries**: Generates high-quality summaries using capable models (e.g., GPT-5).
+- **Smart Filtering**: Uses LLMs (e.g., GPT-4.1-mini) to score paper relevance (0-10) based on your keywords.
+- **Concise Summaries**: Generates high-quality summaries using capable models (e.g., GPT-4.1).
 - **Flexible LLM Support**: Works with GitHub Models (default), OpenAI, Azure OpenAI, or any OpenAI-compatible API.
 - **Incremental Fetching**: Only fetches papers published since the last run to avoid duplicates.
 - **Daily Schedule**: Runs automatically every day at 08:00 UTC.
+- **Reading List**: Mark papers to read later with a checkbox, automatically tracked in a dedicated issue.
 
 ## Configuration
 
@@ -97,11 +98,13 @@ uv sync
 
 ## GitHub Actions
 
+### ArXiv Summarizer
+
 The workflow is defined in `.github/workflows/summarize.yml`. It is configured to run:
 - **Daily** at 08:00 UTC.
 - **Manually** via the "Run workflow" button in the Actions tab.
 
-### Using Custom LLM Providers in GitHub Actions
+#### Using Custom LLM Providers in GitHub Actions
 
 To use a different LLM provider in GitHub Actions, add these repository secrets:
 
@@ -109,3 +112,13 @@ To use a different LLM provider in GitHub Actions, add these repository secrets:
 2. `LLM_API_KEY` - Your provider's API key
 
 If these secrets are not set, the workflow defaults to GitHub Models with `GITHUB_TOKEN`.
+
+### Reading List
+
+Each paper summary includes a "📚 Read Later" checkbox. When you check this box:
+
+1. A GitHub workflow detects the change (`.github/workflows/reading-list.yml`)
+2. The paper title and ArXiv link are automatically added to a **📚 ArXiv Reading List** issue
+3. The reading list issue is created automatically if it doesn't exist (labeled `reading-list`)
+
+This lets you quickly bookmark interesting papers while reviewing the daily digest, with all your selections tracked in one place.
