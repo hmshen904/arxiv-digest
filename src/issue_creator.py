@@ -73,8 +73,12 @@ def create_issue(summaries, repo, usernames=None, issue_label="arxiv-summary", s
     for paper in summaries:
         body += f"## {paper['title']}\n"
         body += f"**Authors:** {', '.join(paper['authors'])}\n\n"
-        body += f"[View on ArXiv]({paper['link']})\n\n"
         body += f"### Summary\n{format_summary(paper['llm_summary'])}\n\n"
+        body += f"[View on ArXiv]({paper['link']})\n\n"
+        # if paper.get('abstract'):
+        #     body += "<details>\n<summary>Abstract</summary>\n\n"
+        #     body += f"{paper['abstract']}\n\n"
+        #     body += "</details>\n\n"
         body += "---\n\n"
 
     # Save issue to tmp folder before posting

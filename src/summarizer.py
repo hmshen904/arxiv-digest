@@ -1,8 +1,43 @@
 import os
+import tempfile
+import requests
+import fitz  # PyMuPDF
 from openai import OpenAI
 
 from paper_summary import PaperSummary
 from utils import save_summary_to_tmp
+
+
+def get_pdf_url(arxiv_link):
+    """Convert ArXiv abstract URL to PDF URL."""
+    # https://arxiv.org/abs/2401.12345 -> https://arxiv.org/pdf/2401.12345.pdf
+    return arxiv_link.replace("/abs/", "/pdf/") + ".pdf"
+
+
+def extract_text_from_pdf(pdf_url, max_chars=50000):
+    """Download PDF and extract text content."""
+    try:
+        response = requests.get(pdf_url, timeout=30)
+        response.raise_for_status()
+        
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp_file:
+            tmp_file.write(response.content)
+            tmp_file.flush()
+            
+            doc = fitz.open(tmp_file.name)
+            text = ""
+            for page in doc:
+                text += page.get_text()
+            doc.close()
+            
+            # Truncate to avoid token limits
+            if len(text) > max_chars:
+                text = text[:max_chars] + "\n... [truncated]"
+            
+            return text
+    except Exception as e:
+        print(f"    Warning: Could not extract PDF text: {e}")
+        return None
 
 
 def summarize_papers(papers, model_name):
@@ -20,6 +55,23 @@ def summarize_papers(papers, model_name):
 
     for paper in papers:
         print(f"  Summarizing: {paper['title']}")
+        
+        # Try to get full paper text from PDF
+        full_text = None
+        if 'link' in paper:
+            pdf_url = get_pdf_url(paper['link'])
+            print(f"    Fetching PDF: {pdf_url}")
+            full_text = extract_text_from_pdf(pdf_url)
+        
+        # TODO: re-enable when fully tested
+        # Use full text if available, otherwise fall back to abstract
+        # if full_text:
+        #     content_section = f"Full Paper Text:\n{full_text}"
+        #     print("    Using full paper text for summarization")
+        # else:
+        content_section = f"Abstract: {paper['abstract']}"
+        print("    Falling back to abstract for summarization")
+        
         prompt = f"""Summarize this research paper by extracting the following information.
 Return a JSON object with exactly these fields:
 - "problem": What problem is being addressed?
@@ -28,7 +80,7 @@ Return a JSON object with exactly these fields:
 
 Title: {paper['title']}
 Authors: {', '.join(paper['authors'])}
-Abstract: {paper['abstract']}"""
+{content_section}"""
 
         try:
             response = client.chat.completions.create(
@@ -71,7 +123,8 @@ if __name__ == "__main__":
     dummy_papers = [{
         "title": "Test Paper",
         "authors": ["Author A", "Author B"],
-        "abstract": "This is a test abstract about LLMs and agents."
+        "abstract": "This is a test abstract about LLMs and agents.",
+        "link": "https://arxiv.org/abs/2401.00001"
     }]
     try:
         summarized = summarize_papers(dummy_papers, summarize_model)

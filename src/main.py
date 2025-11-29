@@ -60,15 +60,13 @@ def main():
     last_run = get_last_issue_date(repo, issue_label)
     if last_run:
         print(f"Last run found: {last_run}")
-        start_date = last_run
     else:
         print("No previous run found. Fetching latest papers (no date limit).")
-        start_date = None
     end_date = datetime.now()
 
     # 1. Fetch
     print("--- Step 1: Fetching Papers ---")
-    papers = fetch_arxiv_papers(categories, max_results, since_date=start_date)
+    papers = fetch_arxiv_papers(categories, max_results, since_date=last_run)
     if not papers:
         print("No new papers found.")
         return
@@ -86,7 +84,7 @@ def main():
 
     # 4. Create Issue
     print("--- Step 4: Creating GitHub Issue ---")
-    create_issue(summarized_papers, repo, usernames, issue_label, start_date, end_date)
+    create_issue(summarized_papers, repo, usernames, issue_label, last_run, end_date)
     
     print("Done!")
 
