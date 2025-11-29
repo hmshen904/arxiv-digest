@@ -1,5 +1,4 @@
 import os
-import yaml
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -7,41 +6,7 @@ from arxiv_fetcher import fetch_arxiv_papers, filter_papers_with_llm
 from summarizer import summarize_papers
 from issue_creator import create_issue
 from github_client import GitHubClient
-
-
-def load_and_validate_config():
-    """Load config.yaml and validate required fields."""
-    with open("config.yaml", "r") as f:
-        config = yaml.safe_load(f)
-    
-    # Validate arxiv section
-    if "arxiv" not in config:
-        raise ValueError("Config missing 'arxiv' section")
-    arxiv = config["arxiv"]
-    if "categories" not in arxiv or not arxiv["categories"]:
-        raise ValueError("Config missing 'arxiv.categories'")
-    if "keywords" not in arxiv or not arxiv["keywords"]:
-        raise ValueError("Config missing 'arxiv.keywords'")
-    if "max_results" not in arxiv:
-        raise ValueError("Config missing 'arxiv.max_results'")
-    
-    # Validate github section
-    if "github" not in config:
-        config["github"] = {}
-    
-    # Validate llm_service section (with defaults)
-    if "llm_service" not in config:
-        config["llm_service"] = {}
-    config["llm_service"].setdefault("base_url", "https://models.github.ai/inference")
-    
-    # Validate models section (with defaults)
-    if "models" not in config:
-        config["models"] = {}
-    config["models"].setdefault("filter", "gpt-5-mini")
-    config["models"].setdefault("summarize", "gpt-5")
-    
-    return config
-
+from utils import load_config
 
 def create_openai_client(base_url):
     """Create and return an OpenAI client."""
@@ -59,7 +24,7 @@ def create_openai_client(base_url):
 def main():
     load_dotenv()
     print("Starting ArXiv Paper Summarizer...")
-    config = load_and_validate_config()
+    config = load_config()
     
     # Extract config values
     categories = config["arxiv"]["categories"]

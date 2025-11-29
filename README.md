@@ -60,10 +60,7 @@ uv sync
 
 **Token Permissions (Fine-grained):**
 - **Issues**: `Read and Write` (to create summaries and check last run).
-- **Metadata**: `Read` (mandatory).
-
-**Model Permissions:**
-- No special scope is needed for GitHub Models. As long as your account has access to the [GitHub Models](https://github.com/marketplace/models) beta (or public availability), your token will work.
+- **Models**: `Read` (to access GitHub models.)
 
 # Run the summarizer
 uv run src/main.py

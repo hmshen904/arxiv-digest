@@ -46,12 +46,10 @@ def create_issue(github_client, summaries, usernames=None, issue_label="arxiv-su
 
 
 if __name__ == "__main__":
-    import os
-    import yaml
     from github_client import GitHubClient
+    from utils import load_config
     
-    with open("config.yaml", "r") as f:
-        config = yaml.safe_load(f)
+    config = load_config()
     
     usernames = config.get("github", {}).get("usernames", [])
     issue_label = config.get("github", {}).get("issue_label", "arxiv-summary")

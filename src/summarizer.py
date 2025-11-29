@@ -1,41 +1,11 @@
-import tempfile
-import requests
-import fitz  # PyMuPDF
-
 from paper_summary import PaperSummary
-from utils import save_summary_to_tmp
+from utils import save_summary_to_tmp, extract_text_from_pdf
 
 
 def get_pdf_url(arxiv_link):
     """Convert ArXiv abstract URL to PDF URL."""
     # https://arxiv.org/abs/2401.12345 -> https://arxiv.org/pdf/2401.12345.pdf
     return arxiv_link.replace("/abs/", "/pdf/") + ".pdf"
-
-
-def extract_text_from_pdf(pdf_url, max_chars=50000):
-    """Download PDF and extract text content."""
-    try:
-        response = requests.get(pdf_url, timeout=30)
-        response.raise_for_status()
-        
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp_file:
-            tmp_file.write(response.content)
-            tmp_file.flush()
-            
-            doc = fitz.open(tmp_file.name)
-            text = ""
-            for page in doc:
-                text += page.get_text()
-            doc.close()
-            
-            # Truncate to avoid token limits
-            if len(text) > max_chars:
-                text = text[:max_chars] + "\n... [truncated]"
-            
-            return text
-    except Exception as e:
-        print(f"    Warning: Could not extract PDF text: {e}")
-        return None
 
 
 def summarize_papers(papers, model_name, client):
@@ -52,14 +22,13 @@ def summarize_papers(papers, model_name, client):
             print(f"    Fetching PDF: {pdf_url}")
             full_text = extract_text_from_pdf(pdf_url)
         
-        # TODO: re-enable when fully tested
         # Use full text if available, otherwise fall back to abstract
-        # if full_text:
-        #     content_section = f"Full Paper Text:\n{full_text}"
-        #     print("    Using full paper text for summarization")
-        # else:
-        content_section = f"Abstract: {paper['abstract']}"
-        print("    Falling back to abstract for summarization")
+        if full_text:
+            content_section = f"Full Paper Text:\n{full_text}"
+            print("    Using full paper text for summarization")
+        else:
+            content_section = f"Abstract: {paper['abstract']}"
+            print("    Falling back to abstract for summarization")
         
         prompt = f"""Summarize this research paper by extracting the following information.
 Return a JSON object with exactly these fields:
@@ -84,10 +53,8 @@ Authors: {', '.join(paper['authors'])}
             summary = PaperSummary.from_json(response.choices[0].message.content)
             paper['llm_summary'] = summary
             
-            # Save to tmp folder for inspection
-            saved_path = save_summary_to_tmp(paper, summary.to_json())
-            print(f"    Saved summary to: {saved_path}")
-            
+            # Save to tmp folder for inspection (local only)
+            save_summary_to_tmp(paper, summary.to_json())
             summaries.append(paper)
             
         except Exception as e:
@@ -103,16 +70,15 @@ Authors: {', '.join(paper['authors'])}
 
 if __name__ == "__main__":
     import os
-    import yaml
     from openai import OpenAI
     from dotenv import load_dotenv
+    from utils import load_config
     
     load_dotenv()
-    with open("config.yaml", "r") as f:
-        config = yaml.safe_load(f)
+    config = load_config()
     
-    summarize_model = config.get("models", {}).get("summarize", "gpt-4o")
-    base_url = config.get("llm_service", {}).get("base_url", "https://models.inference.ai.azure.com")
+    summarize_model = config["models"]["summarize"]
+    base_url = config["llm_service"]["base_url"]
     
     client = OpenAI(base_url=base_url, api_key=os.environ.get("GITHUB_TOKEN"))
     

@@ -111,19 +111,18 @@ Return a score from 0-10 where 0 = not relevant, 10 = highly relevant."""
 
 if __name__ == "__main__":
     import os
-    import yaml
     from openai import OpenAI
     from dotenv import load_dotenv
+    from utils import load_config
     
     load_dotenv()
-    with open("config.yaml", "r") as f:
-        config = yaml.safe_load(f)
+    config = load_config()
     
     categories = config["arxiv"]["categories"]
     keywords = config["arxiv"]["keywords"]
     max_results = config["arxiv"]["max_results"]
-    filter_model = config.get("models", {}).get("filter", "gpt-4o-mini")
-    base_url = config.get("llm_service", {}).get("base_url", "https://models.inference.ai.azure.com")
+    filter_model = config["models"]["filter"]
+    base_url = config["llm_service"]["base_url"]
     
     client = OpenAI(base_url=base_url, api_key=os.environ.get("GITHUB_TOKEN"))
     
