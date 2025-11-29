@@ -1,8 +1,7 @@
 import os
-from azure.ai.inference import ChatCompletionsClient
-from azure.ai.inference.models import SystemMessage, UserMessage
-from azure.core.credentials import AzureKeyCredential
+from openai import OpenAI
 
+from paper_summary import PaperSummary
 from utils import save_summary_to_tmp
 
 
@@ -11,11 +10,9 @@ def summarize_papers(papers, model_name):
     if not token:
         raise ValueError("GITHUB_TOKEN environment variable is not set.")
 
-    endpoint = "https://models.inference.ai.azure.com"
-
-    client = ChatCompletionsClient(
-        endpoint=endpoint,
-        credential=AzureKeyCredential(token),
+    client = OpenAI(
+        base_url="https://models.inference.ai.azure.com",
+        api_key=token,
     )
 
     summaries = []
@@ -23,40 +20,41 @@ def summarize_papers(papers, model_name):
 
     for paper in papers:
         print(f"  Summarizing: {paper['title']}")
-        prompt = f"""
-        Please provide a concise and insightful summary of the following research paper.
-        Focus on the problem being solved, the proposed method, and the key results.
-        Format the output in Markdown.
+        prompt = f"""Summarize this research paper by extracting the following information.
+Return a JSON object with exactly these fields:
+- "problem": What problem is being addressed?
+- "proposed_method": What approach or method is proposed?
+- "key_results": What are the main findings and results?
 
-        Title: {paper['title']}
-        Authors: {', '.join(paper['authors'])}
-        Abstract: {paper['abstract']}
-        """
+Title: {paper['title']}
+Authors: {', '.join(paper['authors'])}
+Abstract: {paper['abstract']}"""
 
         try:
-            response = client.complete(
+            response = client.chat.completions.create(
                 messages=[
-                    SystemMessage(content="You are an expert researcher assistant."),
-                    UserMessage(content=prompt),
+                    {"role": "system", "content": "You are an expert researcher assistant. Provide concise and insightful summaries."},
+                    {"role": "user", "content": prompt},
                 ],
-                model=model_name            )
+                model=model_name,
+                response_format=PaperSummary.get_response_format()
+            )
             
-            summary_text = response.choices[0].message.content
-            paper['llm_summary'] = summary_text
+            summary = PaperSummary.from_json(response.choices[0].message.content)
+            paper['llm_summary'] = summary
             
             # Save to tmp folder for inspection
-            saved_path = save_summary_to_tmp(paper, summary_text)
+            saved_path = save_summary_to_tmp(paper, summary.to_json())
             print(f"    Saved summary to: {saved_path}")
             
             summaries.append(paper)
             
         except Exception as e:
             print(f"Error summarizing paper '{paper['title']}': {e}")
-            error_msg = f"Error generating summary: {e}"
-            paper['llm_summary'] = error_msg
+            paper['llm_summary'] = PaperSummary.error(str(e))
             
             # Save error to tmp folder too
-            save_summary_to_tmp(paper, error_msg)
+            save_summary_to_tmp(paper, paper['llm_summary'].to_json())
             
             summaries.append(paper)
 

@@ -1,11 +1,23 @@
 import feedparser
+import json
 import os
 import time
 import urllib.parse
 from datetime import datetime, timedelta
-from azure.ai.inference import ChatCompletionsClient
-from azure.ai.inference.models import SystemMessage, UserMessage
-from azure.core.credentials import AzureKeyCredential
+from openai import OpenAI
+
+
+RELEVANCE_SCORE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "score": {
+            "type": "integer",
+            "description": "Relevance score from 0-10"
+        }
+    },
+    "required": ["score"],
+    "additionalProperties": False
+}
 
 
 def fetch_arxiv_papers(categories, max_results=20, since_date=None):
@@ -55,11 +67,9 @@ def filter_papers_with_llm(papers, keywords, model_name):
         print("Warning: GITHUB_TOKEN not found. Skipping LLM filtering.")
         return papers # Fallback: return all or implement basic string matching
 
-    endpoint = "https://models.inference.ai.azure.com"
-
-    client = ChatCompletionsClient(
-        endpoint=endpoint,
-        credential=AzureKeyCredential(token),
+    client = OpenAI(
+        base_url="https://models.inference.ai.azure.com",
+        api_key=token,
     )
 
     filtered_papers = []
@@ -67,40 +77,34 @@ def filter_papers_with_llm(papers, keywords, model_name):
     print(f"Filtering {len(papers)} papers with LLM...")
 
     for paper in papers:
-        prompt = f"""
-        User is interested in the following keywords/topics: {', '.join(keywords)}.
-        
-        Paper Title: {paper['title']}
-        Abstract: {paper['abstract']}
-        
-        Rate the relevance of this paper to the user's interests on a scale from 0 to 10.
-        0 = Not relevant at all
-        10 = Highly relevant
-        
-        Reply with strictly the number denoting the relevance score.
-        """
+        prompt = f"""Rate the relevance of this paper to the user's interests.
+
+User's interests: {', '.join(keywords)}
+
+Paper Title: {paper['title']}
+Abstract: {paper['abstract']}
+
+Return a score from 0-10 where 0 = not relevant, 10 = highly relevant."""
 
         try:
-            response = client.complete(
+            response = client.chat.completions.create(
                 messages=[
-                    SystemMessage(content="You are a research paper filter."),
-                    UserMessage(content=prompt),
+                    {"role": "system", "content": "You are a research paper filter."},
+                    {"role": "user", "content": prompt},
                 ],
-                model=model_name
+                model=model_name,
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "relevance_score",
+                        "strict": True,
+                        "schema": RELEVANCE_SCORE_SCHEMA
+                    }
+                }
             )
             
-            content = response.choices[0].message.content.strip()
-            try:
-                score = int(content)
-            except ValueError:
-                # Try to find a number in the string if LLM is chatty
-                import re
-                match = re.search(r'\d+', content)
-                if match:
-                    score = int(match.group())
-                else:
-                    print(f"Warning: Could not extract score from response: {content}")
-                    score = 0
+            result = json.loads(response.choices[0].message.content)
+            score = result["score"]
             
             if score >= 7:
                 print(f"  [KEEP] {paper['title']} (Score: {score})")

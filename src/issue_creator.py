@@ -1,6 +1,7 @@
 import os
 import requests
 from datetime import datetime
+from paper_summary import PaperSummary
 from utils import save_issue_to_tmp
 
 
@@ -38,6 +39,14 @@ def get_last_issue_date(repo, issue_label="arxiv-summary"):
         
     return None
 
+def format_summary(summary):
+    """Format a summary into markdown."""
+    if isinstance(summary, PaperSummary):
+        return summary.to_markdown()
+    # Fallback for plain text summaries
+    return str(summary)
+
+
 def create_issue(summaries, repo, usernames=None, issue_label="arxiv-summary", start_date=None, end_date=None):
     token = os.environ.get("GITHUB_TOKEN")
     
@@ -65,7 +74,7 @@ def create_issue(summaries, repo, usernames=None, issue_label="arxiv-summary", s
         body += f"## {paper['title']}\n"
         body += f"**Authors:** {', '.join(paper['authors'])}\n\n"
         body += f"[View on ArXiv]({paper['link']})\n\n"
-        body += f"### Summary\n{paper['llm_summary']}\n\n"
+        body += f"### Summary\n{format_summary(paper['llm_summary'])}\n\n"
         body += "---\n\n"
 
     # Save issue to tmp folder before posting
