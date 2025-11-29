@@ -69,5 +69,4 @@ class GitHubClient:
             print(f"Issue created successfully: {response.json()['html_url']}")
             return response.json()
         else:
-            print(f"Failed to create issue: {response.status_code} - {response.text}")
-            return None
+            raise RuntimeError(f"Failed to create issue: {response.status_code} - {response.text}")

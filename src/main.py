@@ -106,7 +106,11 @@ def main():
 
     # 4. Create Issue
     print("--- Step 4: Creating GitHub Issue ---")
-    create_issue(github_client, summarized_papers, usernames, issue_label, last_run, end_date)
+    try:
+        create_issue(github_client, summarized_papers, usernames, issue_label, last_run, end_date)
+    except RuntimeError as e:
+        print(f"Error: {e}")
+        exit(1)
     
     print("Done!")
 
