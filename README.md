@@ -62,10 +62,6 @@ uv sync
 - **Issues**: `Read and Write` (to create summaries and check last run).
 - **Models**: `Read` (to access GitHub models.)
 
-# Run the summarizer
-uv run src/main.py
-```
-
 > [!NOTE]
 > When running locally, the tool will try to create a real issue in the specified repository. If you just want to test the fetching/summarizing logic without creating an issue, you can modify `src/main.py` or `src/issue_creator.py` temporarily.
 

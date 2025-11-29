@@ -1,15 +1,18 @@
 arxiv:
   categories:
-    - "cs.AI"
-    - "cs.LG"
-    - "cs.CL"
+    - "cs.CR" # Cryptography and Security
+    - "cs.LG" # Machine Learning
+    # - "cs.SE" # Software Engineering
+    # - "cs.CL" # Computation and Language
+    # - "cs.AI" # Artificial Intelligence
   keywords:
-    - "LLM"
-    - "Large Language Model"
-    - "Agent"
-    - "Multi-agent"
-    - "Reasoning"
-  max_results: 5
+    - "Adversarial Malware Generation"
+    - "Windows PE Malware"
+    - "Executable Adversarial Examples"
+    - "Malware Analysis"
+    - "AI Coding Agents"
+    - "Secure Code Generation"
+  max_results: 20
 
 github:
   usernames:
