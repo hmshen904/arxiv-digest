@@ -21,6 +21,11 @@ github:
 
 llm_service:
   base_url: "https://models.github.ai/inference"
+  # API key is read from LLM_API_KEY env var, falling back to GITHUB_TOKEN
+  # Examples for other providers:
+  # OpenAI: base_url: "https://api.openai.com/v1"
+  # Azure: base_url: "https://<resource>.openai.azure.com/openai/deployments/<deployment>"
+  # Local: base_url: "http://localhost:11434/v1"
 
 models:
   filter: "gpt-5-mini"

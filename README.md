@@ -1,12 +1,12 @@
 # ArXiv Paper Summarizer
 
-A GitHub Actions workflow that fetches recent ArXiv papers, filters them using LLMs (GitHub Models), summarizes them, and publishes the results as GitHub Issues.
+A GitHub Actions workflow that fetches recent ArXiv papers, filters them using LLMs, summarizes them, and publishes the results as GitHub Issues.
 
 ## Features
 - **Smart Filtering**: Uses LLMs (e.g., GPT-5-mini) to score paper relevance (0-10) based on your keywords.
 - **Concise Summaries**: Generates high-quality summaries using capable models (e.g., GPT-5).
+- **Flexible LLM Support**: Works with GitHub Models (default), OpenAI, Azure OpenAI, or any OpenAI-compatible API.
 - **Incremental Fetching**: Only fetches papers published since the last run to avoid duplicates.
-- **Zero Config Auth**: Uses `GITHUB_TOKEN` for all authentication (Models & Issues).
 - **Daily Schedule**: Runs automatically every day at 08:00 UTC.
 
 ## Configuration
@@ -28,10 +28,36 @@ github:
     - "your-username" # Users to tag in the issue
   issue_label: "arxiv-summary"
 
+llm_service:
+  base_url: "https://models.github.ai/inference"
+  # API key is read from LLM_API_KEY env var, falling back to GITHUB_TOKEN if not set
+
 models:
   filter: "gpt-5-mini"
   summarize: "gpt-5"
 ```
+
+### Using Other LLM Providers
+
+The tool supports any OpenAI-compatible API. Configure `llm_service` in `config.yaml`:
+
+```yaml
+# OpenAI
+llm_service:
+  base_url: "https://api.openai.com/v1"
+
+# Azure OpenAI
+llm_service:
+  base_url: "https://<resource>.openai.azure.com/openai/deployments/<deployment>"
+
+# Local (Ollama)
+llm_service:
+  base_url: "http://localhost:11434/v1"
+```
+
+Set your API key via environment variable:
+- `LLM_API_KEY` - Your provider's API key (falls back to `GITHUB_TOKEN` if not set)
+- `LLM_BASE_URL` - Optionally override the base URL
 
 ## Local Development & Testing
 
@@ -52,6 +78,10 @@ uv sync
    ```bash
    GITHUB_TOKEN=your_fine_grained_token
    GITHUB_REPOSITORY=owner/repo
+   
+   # Optional: Use a different LLM provider
+   # LLM_BASE_URL=https://api.openai.com/v1
+   # LLM_API_KEY=your_openai_key
    ```
 2. Run the summarizer:
    ```bash
@@ -70,3 +100,12 @@ uv sync
 The workflow is defined in `.github/workflows/summarize.yml`. It is configured to run:
 - **Daily** at 08:00 UTC.
 - **Manually** via the "Run workflow" button in the Actions tab.
+
+### Using Custom LLM Providers in GitHub Actions
+
+To use a different LLM provider in GitHub Actions, add these repository secrets:
+
+1. `LLM_BASE_URL` - The API endpoint (e.g., `https://api.openai.com/v1`)
+2. `LLM_API_KEY` - Your provider's API key
+
+If these secrets are not set, the workflow defaults to GitHub Models with `GITHUB_TOKEN`.

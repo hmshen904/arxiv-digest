@@ -101,6 +101,13 @@ def load_config(config_path: str = "config.yaml") -> dict:
         config["llm_service"] = {}
     config["llm_service"].setdefault("base_url", "https://models.github.ai/inference")
     
+    # Allow environment variables to override config values
+    if os.environ.get("LLM_BASE_URL"):
+        config["llm_service"]["base_url"] = os.environ["LLM_BASE_URL"]
+    
+    # API key: env var takes precedence, fallback to GITHUB_TOKEN for default provider
+    config["llm_service"]["api_key"] = os.environ.get("LLM_API_KEY") or os.environ.get("GITHUB_TOKEN")
+    
     # Apply models defaults
     if "models" not in config:
         config["models"] = {}

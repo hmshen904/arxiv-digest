@@ -8,16 +8,20 @@ from issue_creator import create_issue
 from github_client import GitHubClient
 from utils import load_config
 
-def create_openai_client(base_url):
-    """Create and return an OpenAI client."""
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        raise ValueError("GITHUB_TOKEN environment variable is not set.")
+def create_openai_client(base_url, api_key):
+    """Create and return an OpenAI client.
+    
+    Args:
+        base_url: The base URL for the LLM API endpoint.
+        api_key: The API key for authentication.
+    """
+    if not api_key:
+        raise ValueError("API key is not set.")
     
     print(f"Creating OpenAI client with base URL: {base_url}")
     return OpenAI(
         base_url=base_url,
-        api_key=token,
+        api_key=api_key,
     )
 
 
@@ -36,11 +40,12 @@ def main():
     issue_label = github_config.get("issue_label", "arxiv-summary")
     
     openai_base_url = config["llm_service"]["base_url"]
+    api_key = config["llm_service"]["api_key"]
     filter_model = config["models"]["filter"]
     summarize_model = config["models"]["summarize"]
     
     # Create clients
-    openai_client = create_openai_client(openai_base_url)
+    openai_client = create_openai_client(openai_base_url, api_key)
     github_client = GitHubClient()
     
     # 0. Determine start date
