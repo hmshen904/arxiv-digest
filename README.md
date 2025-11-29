@@ -24,7 +24,6 @@ arxiv:
   max_results: 20
 
 github:
-  repository: "owner/repo"  # Target repository for issues
   usernames:
     - "your-username" # Users to tag in the issue
   issue_label: "arxiv-summary"
@@ -52,6 +51,7 @@ uv sync
 1. Create a `.env` file in the root directory:
    ```bash
    GITHUB_TOKEN=your_fine_grained_token
+   GITHUB_REPOSITORY=owner/repo
    ```
 2. Run the summarizer:
    ```bash

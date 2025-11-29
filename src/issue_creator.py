@@ -109,11 +109,15 @@ def create_issue(summaries, repo, usernames=None, issue_label="arxiv-summary", s
         print(f"Failed to create issue: {response.status_code} - {response.text}")
 
 if __name__ == "__main__":
+    import os
     import yaml
     with open("config.yaml", "r") as f:
         config = yaml.safe_load(f)
     
-    repo = config.get("github", {}).get("repository")
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    if not repo:
+        print("Warning: GITHUB_REPOSITORY not set. Using test repo.")
+        repo = "test/repo"
     usernames = config.get("github", {}).get("usernames", [])
     issue_label = config.get("github", {}).get("issue_label", "arxiv-summary")
     

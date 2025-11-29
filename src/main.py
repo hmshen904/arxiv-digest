@@ -26,10 +26,13 @@ def load_and_validate_config():
     
     # Validate github section
     if "github" not in config:
-        raise ValueError("Config missing 'github' section")
-    github = config["github"]
-    if "repository" not in github or not github["repository"]:
-        raise ValueError("Config missing 'github.repository'")
+        config["github"] = {}
+    
+    # Get repository from GITHUB_REPOSITORY env var (set by GitHub Actions)
+    github_repo = os.environ.get("GITHUB_REPOSITORY")
+    if not github_repo:
+        raise ValueError("GITHUB_REPOSITORY environment variable is not set. This should be set automatically in GitHub Actions.")
+    config["github"]["repository"] = github_repo
     
     # Validate llm_service section (with defaults)
     if "llm_service" not in config:

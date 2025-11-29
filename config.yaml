@@ -12,7 +12,6 @@ arxiv:
   max_results: 5
 
 github:
-  repository: "matouskozak/arXiv-paper-summaries-review"
   usernames:
     - "matouskozak"
   issue_label: "arxiv-summary"
