@@ -31,6 +31,7 @@ def create_issue(github_client, summaries, usernames=None, issue_label="arxiv-su
         body += f"**Authors:** {', '.join(paper['authors'])}\n\n"
         body += f"### Summary\n{format_summary(paper['llm_summary'])}\n\n"
         body += f"[View on ArXiv]({paper['link']})\n\n"
+        body += f"- [ ] 📚 Read Later\n\n"
         body += "---\n\n"
 
     # Save issue to tmp folder before posting
