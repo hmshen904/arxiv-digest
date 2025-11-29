@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from arxiv_fetcher import fetch_arxiv_papers, filter_papers_with_llm
 from summarizer import summarize_papers
-from issue_creator import create_issue, get_last_issue_date
+from issue_creator import create_issue
+from github_client import GitHubClient
 
 
 def load_and_validate_config():
@@ -27,12 +28,6 @@ def load_and_validate_config():
     # Validate github section
     if "github" not in config:
         config["github"] = {}
-    
-    # Get repository from GITHUB_REPOSITORY env var (set by GitHub Actions)
-    github_repo = os.environ.get("GITHUB_REPOSITORY")
-    if not github_repo:
-        raise ValueError("GITHUB_REPOSITORY environment variable is not set. This should be set automatically in GitHub Actions.")
-    config["github"]["repository"] = github_repo
     
     # Validate llm_service section (with defaults)
     if "llm_service" not in config:
@@ -72,7 +67,6 @@ def main():
     max_results = config["arxiv"]["max_results"]
     
     github_config = config["github"]
-    repo = github_config["repository"]
     usernames = github_config.get("usernames", [])
     issue_label = github_config.get("issue_label", "arxiv-summary")
     
@@ -80,11 +74,12 @@ def main():
     filter_model = config["models"]["filter"]
     summarize_model = config["models"]["summarize"]
     
-    # Create OpenAI client
-    client = create_openai_client(openai_base_url)
+    # Create clients
+    openai_client = create_openai_client(openai_base_url)
+    github_client = GitHubClient()
     
     # 0. Determine start date
-    last_run = get_last_issue_date(repo, issue_label)
+    last_run = github_client.get_last_issue_date(issue_label)
     if last_run:
         print(f"Last run found: {last_run}")
     else:
@@ -100,18 +95,18 @@ def main():
 
     # 2. Filter (LLM)
     print("--- Step 2: Filtering Papers ---")
-    relevant_papers = filter_papers_with_llm(papers, keywords, filter_model, client)
+    relevant_papers = filter_papers_with_llm(papers, keywords, filter_model, openai_client)
     if not relevant_papers:
         print("No relevant papers found after filtering.")
         return
 
     # 3. Summarize
     print("--- Step 3: Summarizing Papers ---")
-    summarized_papers = summarize_papers(relevant_papers, summarize_model, client)
+    summarized_papers = summarize_papers(relevant_papers, summarize_model, openai_client)
 
     # 4. Create Issue
     print("--- Step 4: Creating GitHub Issue ---")
-    create_issue(summarized_papers, repo, usernames, issue_label, last_run, end_date)
+    create_issue(github_client, summarized_papers, usernames, issue_label, last_run, end_date)
     
     print("Done!")
 
