@@ -28,20 +28,6 @@ class Paper:
         )
 
     @classmethod
-    def from_semantic_scholar(cls, data: dict) -> "Paper":
-        """Create a Paper from Semantic Scholar API response."""
-        open_access_pdf = data.get("openAccessPdf") or {}
-        pdf_url = open_access_pdf.get("url") or None
-        return cls(
-            title=data.get("title", "").replace("\n", " "),
-            link=data.get("url", ""),
-            abstract=(data.get("abstract") or "").replace("\n", " "),
-            authors=[a.get("name", "") for a in data.get("authors", [])],
-            published=data.get("publicationDate"),
-            pdf_url=pdf_url,
-        )
-
-    @classmethod
     def from_dict(cls, data: dict) -> "Paper":
         """Create a Paper from a dictionary."""
         summary = data.get("llm_summary") or data.get("summary")

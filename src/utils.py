@@ -85,17 +85,10 @@ def load_config(config_path: str = "config.yaml") -> dict:
     if "keywords" not in config or not config["keywords"]:
         raise ValueError("Config missing 'keywords'")
     
-    # Validate arxiv section (if enabled)
+    # Validate arxiv section
     arxiv = config.get("arxiv", {})
-    if arxiv.get("enabled", True):
-        if "categories" not in arxiv or not arxiv["categories"]:
-            raise ValueError("Config missing 'arxiv.categories'")
-    
-    # Validate semantic_scholar section (if enabled)
-    ss = config.get("semantic_scholar", {})
-    if ss.get("enabled", False):
-        if "categories" not in ss or not ss["categories"]:
-            raise ValueError("Config missing 'semantic_scholar.categories'")
+    if "categories" not in arxiv or not arxiv["categories"]:
+        raise ValueError("Config missing 'arxiv.categories'")
     
     # Validate github section
     if "github" not in config:

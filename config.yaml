@@ -1,4 +1,4 @@
-# Keywords for LLM filtering (shared across all sources)
+# Keywords for LLM filtering of relevant papers
 keywords:
   - "Adversarial Malware Generation"
   - "Windows PE Malware"
@@ -8,19 +8,12 @@ keywords:
   - "Secure Code Generation"
 
 arxiv:
-  enabled: true
   categories:
     - "cs.CR" # Cryptography and Security
     # - "cs.LG" # Machine Learning
     # - "cs.SE" # Software Engineering
     # - "cs.CL" # Computation and Language
     # - "cs.AI" # Artificial Intelligence
-  max_results: 1000
-
-semantic_scholar:
-  enabled: true
-  categories:
-    - "Computer Science"
   max_results: 1000
 
 github:
