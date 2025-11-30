@@ -5,12 +5,12 @@ description = "Summarize ArXiv papers using GitHub Models and create GitHub Issu
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "feedparser>=6.0.10",
-    "openai>=1.0.0",
-    "pyyaml>=6.0.1",
-    "requests>=2.31.0",
-    "python-dotenv>=1.0.0",
-    "pymupdf>=1.24.0",
+    "feedparser>=6.0.12",
+    "openai>=2.8.1",
+    "pyyaml>=6.0.3",
+    "requests>=2.32.5",
+    "python-dotenv>=1.2.1",
+    "pymupdf>=1.26.6",
 ]
 
 [build-system]
