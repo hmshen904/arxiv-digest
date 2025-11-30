@@ -22,14 +22,20 @@ RELEVANCE_SCORE_SCHEMA = {
 }
 
 
-def fetch_arxiv_papers(categories, max_results=20, since_date=None):
-    base_url = "http://export.arxiv.org/api/query?"
+def fetch_arxiv_papers(categories, since_date, max_results=1000):
+    base_url = "https://export.arxiv.org/api/query?"
     # Construct query: cat:cs.AI OR cat:cs.LG ...
-    cat_query = " OR ".join([f"cat:{cat}" for cat in categories])
+    cat_query = "(" + " OR ".join([f"cat:{cat}" for cat in categories]) + ")"
+    
+    # Add date filter (format: submittedDate:[YYYYMMDDHHMM TO YYYYMMDDHHMM])
+    start_date = since_date.strftime("%Y%m%d%H%M")
+    end_date = "999912312359"  # Far future date
+    date_filter = f"submittedDate:[{start_date} TO {end_date}]"
+    search_query = f"{cat_query} AND {date_filter}"
     
     # Sort by submittedDate descending
     query_params = {
-        "search_query": cat_query,
+        "search_query": search_query,
         "start": 0,
         "max_results": max_results,
         "sortBy": "submittedDate",
@@ -42,15 +48,6 @@ def fetch_arxiv_papers(categories, max_results=20, since_date=None):
     
     papers = []
     for entry in feed.entries:
-        # Parse published date
-        published_struct = entry.published_parsed
-        published_dt = datetime.fromtimestamp(time.mktime(published_struct))
-        
-        # Filter by date if provided
-        if since_date and published_dt <= since_date:
-            print(f"  [SKIP] Old paper: {entry.title} ({published_dt})")
-            continue
-
         paper = {
             "title": entry.title.replace("\n", " "),
             "link": entry.link,

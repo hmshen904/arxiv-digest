@@ -52,13 +52,15 @@ def main():
     last_run = github_client.get_last_issue_date(issue_label)
     if last_run:
         print(f"Last run found: {last_run}")
+        last_run = last_run - timedelta(hours=1)  # Buffer of 1 hour
     else:
-        print("No previous run found. Fetching latest papers (no date limit).")
+        last_run = datetime.now() - timedelta(days=14)
+        print(f"No previous run found. Fetching papers from last 14 days (since {last_run}).")
     end_date = datetime.now()
 
     # 1. Fetch
     print("--- Step 1: Fetching Papers ---")
-    papers = fetch_arxiv_papers(categories, max_results, since_date=last_run)
+    papers = fetch_arxiv_papers(categories, since_date=last_run, max_results=max_results)
     if not papers:
         print("No new papers found.")
         return
