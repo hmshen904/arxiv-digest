@@ -81,16 +81,21 @@ def load_config(config_path: str = "config.yaml") -> dict:
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
     
-    # Validate arxiv section
-    if "arxiv" not in config:
-        raise ValueError("Config missing 'arxiv' section")
-    arxiv = config["arxiv"]
-    if "categories" not in arxiv or not arxiv["categories"]:
-        raise ValueError("Config missing 'arxiv.categories'")
-    if "keywords" not in arxiv or not arxiv["keywords"]:
-        raise ValueError("Config missing 'arxiv.keywords'")
-    if "max_results" not in arxiv:
-        raise ValueError("Config missing 'arxiv.max_results'")
+    # Validate keywords (used for LLM filtering)
+    if "keywords" not in config or not config["keywords"]:
+        raise ValueError("Config missing 'keywords'")
+    
+    # Validate arxiv section (if enabled)
+    arxiv = config.get("arxiv", {})
+    if arxiv.get("enabled", True):
+        if "categories" not in arxiv or not arxiv["categories"]:
+            raise ValueError("Config missing 'arxiv.categories'")
+    
+    # Validate semantic_scholar section (if enabled)
+    ss = config.get("semantic_scholar", {})
+    if ss.get("enabled", False):
+        if "categories" not in ss or not ss["categories"]:
+            raise ValueError("Config missing 'semantic_scholar.categories'")
     
     # Validate github section
     if "github" not in config:

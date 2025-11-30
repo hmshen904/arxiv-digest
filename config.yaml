@@ -1,17 +1,26 @@
+# Keywords for LLM filtering (shared across all sources)
+keywords:
+  - "Adversarial Malware Generation"
+  - "Windows PE Malware"
+  - "Executable Adversarial Examples"
+  - "Malware Analysis"
+  - "AI Coding Agents"
+  - "Secure Code Generation"
+
 arxiv:
+  enabled: true
   categories:
     - "cs.CR" # Cryptography and Security
     # - "cs.LG" # Machine Learning
     # - "cs.SE" # Software Engineering
     # - "cs.CL" # Computation and Language
     # - "cs.AI" # Artificial Intelligence
-  keywords:
-    - "Adversarial Malware Generation"
-    - "Windows PE Malware"
-    - "Executable Adversarial Examples"
-    - "Malware Analysis"
-    - "AI Coding Agents"
-    - "Secure Code Generation"
+  max_results: 1000
+
+semantic_scholar:
+  enabled: true
+  categories:
+    - "Computer Science"
   max_results: 1000
 
 github:

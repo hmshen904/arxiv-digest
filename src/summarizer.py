@@ -8,11 +8,12 @@ def summarize_papers(papers: list[Paper], model_name, client) -> list[Paper]:
     for paper in papers:
         print(f"  Summarizing: {paper.title}")
         
-        # Try to get full paper text from PDF
+        # Try to get full paper text from PDF if available
         full_text = None
         pdf_url = paper.get_pdf_url()
-        print(f"    Fetching PDF: {pdf_url}")
-        full_text = extract_text_from_pdf(pdf_url)
+        if pdf_url:
+            print(f"    Fetching PDF: {pdf_url}")
+            full_text = extract_text_from_pdf(pdf_url)
         
         # Use full text if available, otherwise fall back to abstract
         if full_text:

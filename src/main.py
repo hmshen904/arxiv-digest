@@ -2,7 +2,9 @@ import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from openai import OpenAI
-from arxiv_fetcher import fetch_arxiv_papers, filter_papers_with_llm
+from arxiv_fetcher import fetch_arxiv_papers
+from semantic_scholar_fetcher import fetch_semantic_scholar_papers
+from paper_filter import filter_papers_with_llm
 from summarizer import summarize_papers
 from issue_creator import create_issue
 from github_client import GitHubClient
@@ -27,13 +29,12 @@ def create_openai_client(base_url, api_key):
 
 def main():
     load_dotenv()
-    print("Starting ArXiv Paper Summarizer...")
+    print("Starting Paper Summarizer...")
     config = load_config()
     
     # Extract config values
-    categories = config["arxiv"]["categories"]
-    keywords = config["arxiv"]["keywords"]
-    max_results = config["arxiv"]["max_results"]
+    arxiv_config = config.get("arxiv", {})
+    semantic_scholar_config = config.get("semantic_scholar", {})
     
     github_config = config["github"]
     usernames = github_config.get("usernames", [])
@@ -58,15 +59,48 @@ def main():
         print(f"No previous run found. Fetching papers from last 14 days (since {last_run}).")
     end_date = datetime.now()
 
-    # 1. Fetch
+    # 1. Fetch papers from enabled sources
     print("--- Step 1: Fetching Papers ---")
-    papers = fetch_arxiv_papers(categories, since_date=last_run, max_results=max_results)
+    papers = []
+    
+    # Fetch from arXiv if enabled
+    if arxiv_config.get("enabled", True):
+        arxiv_papers = fetch_arxiv_papers(
+            categories=arxiv_config["categories"],
+            since_date=last_run,
+            max_results=arxiv_config.get("max_results", 1000),
+        )
+        papers.extend(arxiv_papers)
+    
+    # Fetch from Semantic Scholar if enabled
+    if semantic_scholar_config.get("enabled", False):
+        ss_papers = fetch_semantic_scholar_papers(
+            categories=semantic_scholar_config.get("categories"),
+            since_date=last_run,
+            max_results=semantic_scholar_config.get("max_results", 100),
+        )
+        papers.extend(ss_papers)
+    
+    # Deduplicate by title (simple approach)
+    seen_titles = set()
+    unique_papers = []
+    for paper in papers:
+        title_lower = paper.title.lower().strip()
+        if title_lower not in seen_titles:
+            seen_titles.add(title_lower)
+            unique_papers.append(paper)
+    
+    if len(papers) != len(unique_papers):
+        print(f"Removed {len(papers) - len(unique_papers)} duplicate papers.")
+    papers = unique_papers
+    
     if not papers:
         print("No new papers found.")
         return
 
     # 2. Filter (LLM)
     print("--- Step 2: Filtering Papers ---")
+    keywords = config["keywords"]
     relevant_papers = filter_papers_with_llm(papers, keywords, filter_model, openai_client)
     if not relevant_papers:
         print("No relevant papers found after filtering.")
