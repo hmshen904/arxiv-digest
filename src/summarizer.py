@@ -20,7 +20,10 @@ def summarize_papers(papers: list[Paper], model_name, client) -> list[Paper]:
             content_section = f"Full Paper Text:\n{full_text}"
             print("    Using full paper text for summarization")
         else:
-            content_section = f"Abstract: {paper.abstract}"
+            content_section = f"""
+Title: {paper.title}
+Authors: {', '.join(paper.authors)}
+Abstract: {paper.abstract}"""
             print("    Falling back to abstract for summarization")
         
         prompt = f"""Summarize this research paper by extracting the following information.
@@ -29,9 +32,9 @@ Return a JSON object with exactly these fields:
 - "proposed_method": What approach or method is proposed?
 - "key_results": What are the main findings and results?
 
-Title: {paper.title}
-Authors: {', '.join(paper.authors)}
-{content_section}"""
+Here is the paper content:
+{content_section}
+"""
 
         try:
             response = call_with_retry(lambda: client.chat.completions.create(
