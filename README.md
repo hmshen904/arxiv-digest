@@ -50,15 +50,38 @@ llm_service:
 # Azure OpenAI
 llm_service:
   base_url: "https://<resource>.openai.azure.com/openai/deployments/<deployment>"
-
-# Local (Ollama)
-llm_service:
-  base_url: "http://localhost:11434/v1"
 ```
 
 Set your API key via environment variable:
 - `LLM_API_KEY` - Your provider's API key (falls back to `GITHUB_TOKEN` if not set)
 - `LLM_BASE_URL` - Optionally override the base URL
+
+## GitHub Actions
+
+### ArXiv Summarizer
+
+The workflow is defined in `.github/workflows/summarize.yml`. It is configured to run:
+- **Daily** at 08:00 UTC.
+- **Manually** via the "Run workflow" button in the Actions tab.
+
+#### Using Custom LLM Providers in GitHub Actions
+
+To use a different LLM provider in GitHub Actions, add these repository secrets:
+
+1. `LLM_BASE_URL` - The API endpoint (e.g., `https://api.openai.com/v1`)
+2. `LLM_API_KEY` - Your provider's API key
+
+If these secrets are not set, the workflow defaults to GitHub Models with `GITHUB_TOKEN`.
+
+### Reading List
+
+Each paper summary includes a "📚 Read Later" checkbox. When you check this box:
+
+1. A GitHub workflow detects the change (`.github/workflows/reading-list.yml`)
+2. The paper title and ArXiv link are automatically added to a **📚 ArXiv Reading List** issue
+3. The reading list issue is created automatically if it doesn't exist (labeled `reading-list`)
+
+This lets you quickly bookmark interesting papers while reviewing the daily digest, with all your selections tracked in one place.
 
 ## Local Development & Testing
 
@@ -95,30 +118,3 @@ uv sync
 
 > [!NOTE]
 > When running locally, the tool will try to create a real issue in the specified repository. If you just want to test the fetching/summarizing logic without creating an issue, you can modify `src/main.py` or `src/issue_creator.py` temporarily.
-
-## GitHub Actions
-
-### ArXiv Summarizer
-
-The workflow is defined in `.github/workflows/summarize.yml`. It is configured to run:
-- **Daily** at 08:00 UTC.
-- **Manually** via the "Run workflow" button in the Actions tab.
-
-#### Using Custom LLM Providers in GitHub Actions
-
-To use a different LLM provider in GitHub Actions, add these repository secrets:
-
-1. `LLM_BASE_URL` - The API endpoint (e.g., `https://api.openai.com/v1`)
-2. `LLM_API_KEY` - Your provider's API key
-
-If these secrets are not set, the workflow defaults to GitHub Models with `GITHUB_TOKEN`.
-
-### Reading List
-
-Each paper summary includes a "📚 Read Later" checkbox. When you check this box:
-
-1. A GitHub workflow detects the change (`.github/workflows/reading-list.yml`)
-2. The paper title and ArXiv link are automatically added to a **📚 ArXiv Reading List** issue
-3. The reading list issue is created automatically if it doesn't exist (labeled `reading-list`)
-
-This lets you quickly bookmark interesting papers while reviewing the daily digest, with all your selections tracked in one place.
