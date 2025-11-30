@@ -5,7 +5,7 @@ import time
 import urllib.parse
 from datetime import datetime, timedelta
 
-
+from models import Paper
 from utils import call_with_retry
 
 
@@ -46,21 +46,12 @@ def fetch_arxiv_papers(categories, since_date, max_results=1000):
     print(f"Fetching from ArXiv: {url}")
     feed = feedparser.parse(url)
     
-    papers = []
-    for entry in feed.entries:
-        paper = {
-            "title": entry.title.replace("\n", " "),
-            "link": entry.link,
-            "abstract": entry.summary.replace("\n", " "),
-            "published": entry.published,
-            "authors": [author.name for author in entry.authors]
-        }
-        papers.append(paper)
+    papers = [Paper.from_arxiv_entry(entry) for entry in feed.entries]
 
     print(f"Fetched {len(papers)} papers.")
     return papers
 
-def filter_papers_with_llm(papers, keywords, model_name, client):
+def filter_papers_with_llm(papers: list[Paper], keywords, model_name, client) -> list[Paper]:
     filtered_papers = []
     
     print(f"Filtering {len(papers)} papers with LLM...")
@@ -72,8 +63,8 @@ User's interests: {', '.join(keywords)}
 
 The paper is considered relevant if it aligns with ANY of the interests listed above (not necessarily all of them).
 
-Paper Title: {paper['title']}
-Abstract: {paper['abstract']}
+Paper Title: {paper.title}
+Abstract: {paper.abstract}
 
 Return a score from 0-10 where 0 = not relevant, 10 = highly relevant."""
 
@@ -98,13 +89,13 @@ Return a score from 0-10 where 0 = not relevant, 10 = highly relevant."""
             score = result["score"]
             
             if score >= 7:
-                print(f"  [KEEP] {paper['title']} (Score: {score})")
+                print(f"  [KEEP] {paper.title} (Score: {score})")
                 filtered_papers.append(paper)
             else:
-                print(f"  [SKIP] {paper['title']} (Score: {score})")
+                print(f"  [SKIP] {paper.title} (Score: {score})")
                 
         except Exception as e:
-            print(f"Error filtering paper '{paper['title']}': {e}")
+            print(f"Error filtering paper '{paper.title}': {e}")
             # On error, maybe keep it to be safe? Or skip. Let's keep it.
             filtered_papers.append(paper)
         

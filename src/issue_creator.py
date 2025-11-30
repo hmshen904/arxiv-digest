@@ -1,5 +1,5 @@
 from datetime import datetime
-from paper_summary import PaperSummary
+from models import Paper, PaperSummary
 from utils import save_issue_to_tmp
 
 
@@ -10,7 +10,7 @@ def format_summary(summary):
     return str(summary)
 
 
-def create_issue(github_client, summaries, usernames=None, issue_label="arxiv-summary", start_date=None, end_date=None):
+def create_issue(github_client, papers: list[Paper], usernames=None, issue_label="arxiv-summary", start_date=None, end_date=None):
     if usernames is None:
         usernames = []
 
@@ -24,13 +24,13 @@ def create_issue(github_client, summaries, usernames=None, issue_label="arxiv-su
         title = f"ArXiv Summary - {date_str}"
     
     body = f"# ArXiv Paper Summaries ({date_str})\n\n"
-    body += f"Found {len(summaries)} relevant papers.\n\n"
+    body += f"Found {len(papers)} relevant papers.\n\n"
     
-    for paper in summaries:
-        body += f"## {paper['title']}\n"
-        body += f"**Authors:** {', '.join(paper['authors'])}\n\n"
-        body += f"### Summary\n{format_summary(paper['llm_summary'])}\n\n"
-        body += f"[View on ArXiv]({paper['link']})\n\n"
+    for paper in papers:
+        body += f"## {paper.title}\n"
+        body += f"**Authors:** {', '.join(paper.authors)}\n\n"
+        body += f"### Summary\n{format_summary(paper.summary)}\n\n"
+        body += f"[View on ArXiv]({paper.link})\n\n"
         body += f"- [ ] 📚 Read Later\n\n"
         body += "---\n\n"
 
@@ -58,12 +58,17 @@ if __name__ == "__main__":
     # Test with dummy data (will fail locally without correct env vars)
     try:
         client = GitHubClient()
-        dummy_summaries = [{
-            "title": "Test Paper",
-            "authors": ["Me", "You"],
-            "link": "http://arxiv.org/abs/1234.5678",
-            "llm_summary": "This is a summary."
-        }]
-        create_issue(client, dummy_summaries, usernames, issue_label)
+        dummy_papers = [Paper(
+            title="Test Paper",
+            authors=["Me", "You"],
+            link="http://arxiv.org/abs/1234.5678",
+            abstract="Test abstract",
+            summary=PaperSummary(
+                problem="Test problem",
+                proposed_method="Test method",
+                key_results="Test results"
+            )
+        )]
+        create_issue(client, dummy_papers, usernames, issue_label)
     except ValueError as e:
         print(f"Test skipped: {e}")
