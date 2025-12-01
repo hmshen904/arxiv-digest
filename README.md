@@ -7,7 +7,7 @@ A GitHub Actions workflow that fetches recent ArXiv papers, filters them using L
 - **Concise Summaries**: Generates high-quality summaries using capable models (e.g., GPT-4.1).
 - **Flexible LLM Support**: Works with GitHub Models (default), OpenAI, Azure OpenAI, or any OpenAI-compatible API.
 - **Incremental Fetching**: Only fetches papers published since the last run to avoid duplicates.
-- **Daily Schedule**: Runs automatically every day at 08:00 UTC.
+- **Daily Schedule**: Runs automatically every day at 07:00 UTC.
 - **Reading List**: Mark papers to read later with a checkbox, automatically tracked in a dedicated issue.
 
 ## Configuration
@@ -61,7 +61,7 @@ Set your API key via environment variable:
 ### ArXiv Summarizer
 
 The workflow is defined in `.github/workflows/summarize.yml`. It is configured to run:
-- **Daily** at 08:00 UTC.
+- **Daily** at 07:00 UTC.
 - **Manually** via the "Run workflow" button in the Actions tab.
 
 #### Using Custom LLM Providers in GitHub Actions
