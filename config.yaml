@@ -1,11 +1,10 @@
 # Keywords for LLM filtering of relevant papers
 keywords:
-  - "Adversarial Malware Generation"
-  - "Windows PE Malware"
-  - "Executable Adversarial Examples"
-  - "Malware Analysis"
-  - "AI Coding Agents"
-  - "Secure Code Generation"
+  - "Adversarial Attacks"
+  - "Malware"
+  - "Antivirus"
+  - "Large Language Models"
+  - "Code Generation"
 
 arxiv:
   categories:
