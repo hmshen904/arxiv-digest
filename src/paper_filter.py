@@ -47,7 +47,7 @@ Return a score from 0-10 where 0 = not relevant, 10 = highly relevant."""
         try:
             response = call_with_retry(lambda: client.chat.completions.create(
                 messages=[
-                    {"role": "system", "content": "You are a research paper filter."},
+                    {"role": "system", "content": "You are a research assistant that helps filter academic papers based on user interests."},
                     {"role": "user", "content": prompt},
                 ],
                 model=model_name,
