@@ -34,5 +34,5 @@ llm_service:
   # Local: base_url: "http://localhost:11434/v1"
 
 models:
-  filter: "gpt-5-mini"
-  summarize: "gpt-5"
+  filter: "gpt-4.1-mini"
+  summarize: "gpt-4.1"
