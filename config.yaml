@@ -1,14 +1,19 @@
 # Keywords for LLM filtering of relevant papers
 keywords:
-  - "Adversarial Attacks"
-  - "Malware"
-  - "Antivirus"
-  - "Large Language Models"
-  - "Code Generation"
+  - "Decision Dependent Uncertainty"
+  - "Endogenous Uncertainty"
+  - "Robust Optimization"
+  - "Distributionally Robust Optimization"
+  - "Stochastic Gradient Descent"
+  - "Sequential Quadratic Optimization"
+  - "Sequential Quadratic Programming"
+  - "Chance Constraints"
+  - "Physics Informed Neural Network"
 
 arxiv:
   categories:
-    - "cs.CR" # Cryptography and Security
+    - "math.OC" # Optimization and Control
+    # - "cs.CR" # Cryptography and Security
     # - "cs.LG" # Machine Learning
     # - "cs.SE" # Software Engineering
     # - "cs.CL" # Computation and Language
@@ -17,7 +22,7 @@ arxiv:
 
 github:
   usernames:
-    - "matouskozak"
+    - "BellyFat"
   issue_label: "arxiv-summary"
 
 llm_service:
@@ -29,5 +34,5 @@ llm_service:
   # Local: base_url: "http://localhost:11434/v1"
 
 models:
-  filter: "gpt-4.1-mini"
-  summarize: "gpt-4.1"
+  filter: "gpt-5-mini"
+  summarize: "gpt-5"
